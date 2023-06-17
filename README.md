@@ -1,8 +1,31 @@
 # File
 
-- middlewares: Validate hoặc lọc dữ liệu đầu vào trước khi xử lý logic
-- controllers: Nơi xử lý login kết quả "(req, res) => {}", gọi services lấy dữ liệu trong data base để xử lý
+## routes
 
-- models
-- constant
-- services: Xử lý data base trả về cho controllers
+- Chứa các file routes cho từng Collection (users, ...)
+- Trong các file routes Collection chứa các routes cho Collection đó
+- Cấu trúc:
+  > usersRouter.post([Path], [Middlewares], [Controllers])
+
+## middlewares
+
+- Chứa các file middlewares cho từng Collection (users, ...)
+- Sử dụng để Validate hoặc lọc dữ liệu đầu vào trước khi xử lý logic, service
+- VD:
+  > Check data nhận từ req.body có dữ liệu hay không để trả về thông báo lỗi trước khi xử lý đến DB (Kiểm tra email, password user đã gửi lên đủ chưa)
+
+## controllers
+
+- Chứa các file xử lý cho từng Collection (users, ...)
+- Trong các file chứa các function xử lý login kết quả **"(req, res) => {}"**, gọi đến Services để truyền/nhận liệu trong DB để xử lý
+
+## services
+
+- Chứa file kết nối đến DB và các file xử lý dữ liệu của từng Collection trong DB (users, ...)
+- Truy cập vào DB để truyền/nhận dữ liệu và trả về cho controllers xử lý tiếp
+
+## models
+
+- Chứa các cấu trúc schema để khởi tạo Obj của từng Collection (users, ...)
+
+## constant
