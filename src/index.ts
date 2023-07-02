@@ -6,6 +6,7 @@ const port = 3000
 
 // --- App hendler ---
 app.use(express.json()) // Middlewares chuyển data req JSON sang dạng Obj
+// Cú pháp *.use() là middlewate, có thể có nhiều middlewate (Khi truy cập vào router thì luôn phải đi qua nó trước)
 app.use('/users', usersRouter) // Liên kết app tới router vừa tạo vơi tên router là '/user/
 databaseServce.connect() // Connect tới MongoDB
 

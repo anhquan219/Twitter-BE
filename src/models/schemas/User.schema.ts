@@ -1,15 +1,11 @@
 import { ObjectId } from 'mongodb'
+import { UserVerifyStatus } from '~/constants/enums'
 
-enum UserVerifyStatus {
-  Unverified, // chưa xác thực email, mặc định = 0
-  Verified, // đã xác thực email
-  Banned // bị khóa
-}
 interface UserType {
   _id?: ObjectId
-  name?: string
+  name: string
   email: string
-  date_of_birth?: Date
+  date_of_birth: Date
   password: string
   created_at?: Date
   updated_at?: Date
@@ -45,6 +41,7 @@ export default class User {
   cover_photo: string
 
   // Khu khởi tạo giá trị ban đầu cho các biến (Khi 1 Obj được tạo mới từ class sẽ chạy constructor để khởi tạo giá trị)
+  // Khi 1 nơi sử dụng new User() thì dù có truyền dư data thì nó cũng chỉ lấy đúng các trường khai báo trong User thôi
   constructor(user: UserType) {
     const date = new Date()
     this._id = user._id || new ObjectId()
