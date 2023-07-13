@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import userService from '~/services/user.services'
 import { ParamsDictionary } from 'express-serve-static-core'
-import { RegisterReqBody } from '~/models/schemas/requests/User.requests'
+import { RegisterReqBody } from '~/models/requests/User.requests'
 
 export const loginController = (req: Request, res: Response) => {
   const { email, password } = req.body
