@@ -1,18 +1,58 @@
-import { Request, Response, NextFunction } from 'express'
 import { checkSchema } from 'express-validator'
 import { validate } from '~/utils/validation'
 import userService from '~/services/user.services'
 import { USERS_MESSAGES } from '~/constants/messages'
+import databaseServce from '~/services/database.services'
+import { hashPasswork } from '~/utils/crypto'
 
-export const loginValidator = (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body
-  if (!email || !password) {
-    return res.status(400).json({
-      error: 'Missing email or password'
-    })
-  }
-  next()
-}
+export const loginValidator = validate(
+  checkSchema({
+    email: {
+      isEmail: {
+        errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+      },
+      trim: true,
+      // Check Email tồn tại trong DB chưa
+      custom: {
+        options: async (value, { req }) => {
+          // Search xem DB có tài khoản này không
+          const user = await databaseServce.users.findOne({ email: value, password: hashPasswork(req.body.password) })
+          if (user === null) {
+            throw new Error(USERS_MESSAGES.EMAIL_OR_PASSWORD_IS_INCORRECT)
+          }
+
+          // Lưu user vừa find được vào req để xử lý bên controller mà không cần find lại lần nữa
+          req.user = user
+          return true
+        }
+      }
+    },
+    password: {
+      notEmpty: {
+        errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
+      },
+      isString: {
+        errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_A_STRING
+      },
+      isLength: {
+        options: {
+          min: 6,
+          max: 50
+        },
+        errorMessage: USERS_MESSAGES.PASSWORD_LENGTH_MUST_BE_FROM_6_TO_50
+      },
+      isStrongPassword: {
+        options: {
+          minLength: 6,
+          minLowercase: 1,
+          minUppercase: 1,
+          minSymbols: 1
+        }
+      },
+      errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRONG
+    }
+  })
+)
 
 // Sử dụng checkSchema() kết hợp validate() để validate các trường
 export const registerValidator = validate(
@@ -36,9 +76,6 @@ export const registerValidator = validate(
     email: {
       isEmail: {
         errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
-      },
-      notEmpty: {
-        errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
       },
       trim: true,
       // Check Email tồn tại trong DB chưa

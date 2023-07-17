@@ -4,6 +4,10 @@ import { RegisterReqBody } from '~/models/requests/User.requests'
 import { hashPasswork } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
 import { TokenType } from '~/constants/enums'
+import { ObjectId } from 'mongodb'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import { config } from 'dotenv'
+config()
 
 export class UserService {
   private signAccessToken(user_id: string) {
@@ -30,6 +34,11 @@ export class UserService {
     })
   }
 
+  // Hàm tạo accesst_token, refresh_tokenToken
+  private signAccessAndRefreshToken(user_id: string) {
+    return Promise.all([this.signAccessToken(user_id), this.signRefreshTokenToken(user_id)])
+  }
+
   // Hàm xử lý register tài khoản
   async register(payload: RegisterReqBody) {
     // Tạo tài khoản mới trong DB (insertOne: chèn 1 tài liệu mới vào Collection có tên "users")
@@ -45,10 +54,16 @@ export class UserService {
 
     // Lưu ý: DB không lưu token nào cả, chỉ trả về cho FE lưu
     // Sử dụng Promise vì các hàm tạo token đều là bất đồng bộ
-    const [accesst_token, refresh_tokenToken] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshTokenToken(user_id)
-    ])
+    // Tạo accesst_token, refresh_tokenToken
+    const [accesst_token, refresh_tokenToken] = await this.signAccessAndRefreshToken(user_id)
+
+    // Lưu refresh_tokenToken vào DB sau khi Đăng kí tài khoản thành công
+    databaseServce.refreshtokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_tokenToken
+      })
+    )
     return {
       ...result,
       accesst_token,
@@ -60,6 +75,24 @@ export class UserService {
     // Tìm kiếm email trong DB (findOne: Tìm xem trong Collection có tên "users" có tồn tại email đó không >>> trả về Obj đó nếu có)
     const user = await databaseServce.users.findOne({ email })
     return Boolean(user)
+  }
+
+  async login(user_id: string) {
+    // Tạo accesst_token, refresh_tokenToken
+    const [accesst_token, refresh_tokenToken] = await this.signAccessAndRefreshToken(user_id)
+
+    // Lưu refresh_tokenToken vào DB sau khi Đăng nhập thành công
+    databaseServce.refreshtokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_tokenToken
+      })
+    )
+
+    return {
+      accesst_token,
+      refresh_tokenToken
+    }
   }
 }
 

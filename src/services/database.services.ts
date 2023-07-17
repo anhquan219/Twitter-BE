@@ -1,7 +1,8 @@
 import { MongoClient, Db, Collection } from 'mongodb'
 import { config } from 'dotenv'
 import User from '~/models/schemas/User.schema'
-config()
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
+config() // Cần gọi để sử dụng đươc process.env
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@twiiter.lto2cut.mongodb.net/?retryWrites=true&w=majority`
 
@@ -28,9 +29,13 @@ class DatabaseServce {
     }
   }
 
-  // Get dữ liệu trong Collection có tên DB_USER_COLLECTION trong DB
+  // Truy cập vào Collection có tên DB_USER_COLLECTION trong DB
   get users(): Collection<User> {
     return this.db.collection(process.env.DB_USER_COLLECTION as string)
+  }
+
+  get refreshtokens(): Collection<RefreshToken> {
+    return this.db.collection(process.env.DB_REFRESH_TOKEN_COLLECTION as string)
   }
 }
 
