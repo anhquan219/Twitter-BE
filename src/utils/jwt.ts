@@ -1,5 +1,6 @@
 import { config } from 'dotenv'
 import jwt from 'jsonwebtoken'
+import { reject } from 'lodash'
 config()
 
 // Tạo Token
@@ -20,6 +21,32 @@ export const signToken = ({
         throw rejects(err)
       }
       resolve(token as string)
+    })
+  })
+}
+
+// Lấy thông tin trong token
+export const verifyToken = ({
+  token,
+  secretOrPublickey = process.env.JWT_SECRECT as string
+}: {
+  token: string
+  secretOrPublickey?: string
+}) => {
+  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+    jwt.verify(token, secretOrPublickey, (error, decoded) => {
+      if (error) {
+        throw reject(error)
+      }
+      /**
+       * decoded = {
+            user_id: '64b33e65d220090d0cc8458a',
+            token_type: 0,
+            iat: 1689771031,
+            exp: 1689771931
+          }
+       */
+      resolve(decoded as jwt.JwtPayload)
     })
   })
 }
