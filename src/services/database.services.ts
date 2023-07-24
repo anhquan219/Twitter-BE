@@ -34,7 +34,7 @@ class DatabaseServce {
     return this.db.collection(process.env.DB_USER_COLLECTION as string)
   }
 
-  get refreshtokens(): Collection<RefreshToken> {
+  get refreshTokens(): Collection<RefreshToken> {
     return this.db.collection(process.env.DB_REFRESH_TOKEN_COLLECTION as string)
   }
 }

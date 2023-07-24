@@ -1,6 +1,6 @@
 import { config } from 'dotenv'
 import jwt from 'jsonwebtoken'
-import { reject } from 'lodash'
+import { TokenPayload } from '~/models/requests/User.requests'
 config()
 
 // Tạo Token
@@ -33,7 +33,7 @@ export const verifyToken = ({
   token: string
   secretOrPublickey?: string
 }) => {
-  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+  return new Promise<TokenPayload>((resolve, reject) => {
     jwt.verify(token, secretOrPublickey, (error, decoded) => {
       if (error) {
         throw reject(error)
@@ -46,7 +46,7 @@ export const verifyToken = ({
             exp: 1689771931
           }
        */
-      resolve(decoded as jwt.JwtPayload)
+      resolve(decoded as TokenPayload)
     })
   })
 }

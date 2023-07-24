@@ -7,6 +7,9 @@ import { hashPasswork } from '~/utils/crypto'
 import { verifyToken } from '~/utils/jwt'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { ErorrWithStatus } from '~/models/Errors'
+import { JsonWebTokenError } from 'jsonwebtoken'
+import { capitalize } from 'lodash'
+import { Request } from 'express'
 
 export const loginValidator = validate(
   checkSchema(
@@ -171,26 +174,74 @@ export const accessTokenValidator = validate(
   checkSchema(
     {
       Authorization: {
-        // Kiểm tra người dùng có gửi Authorization lên không
+        // Kiểm tra người dùng có gửi Authorization lên trong header không (access_token)
         notEmpty: {
           errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
         },
         custom: {
           options: async (value: string, { req }) => {
             const access_token = value.split(' ')[1]
+            // Kiểm tra xem có access_token không
             if (!access_token) {
               throw new ErorrWithStatus({
                 message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
                 status: HTTP_STATUS.UNAUTHORIZED
               })
             }
-            const decoded_authorization = await verifyToken({ token: access_token })
-            req.decoded_authorization = decoded_authorization
+            //Xác thực access_token có đúng hay không và gán vào req
+            try {
+              const decoded_authorization = await verifyToken({ token: access_token })
+              ;(req as Request).decoded_authorization = decoded_authorization
+            } catch (error) {
+              throw new ErorrWithStatus({
+                message: capitalize((error as JsonWebTokenError).message),
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
             return true
           }
         }
       }
     },
     ['headers'] // Phạm vi check (headers FE gửi lên)
+  )
+)
+
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        // Kiểm tra người dùng có gửi Authorization lên không (refresh_token)
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            // Xác thực refresh_token và kiểm tra refresh_token tồn tại trong DB không và gắn vào req
+            try {
+              const [decoded_refresh_token, refresh_token] = await Promise.all([
+                verifyToken({ token: value }),
+                databaseServce.refreshTokens.findOne({ token: value })
+              ])
+              if (refresh_token === null) {
+                throw new ErorrWithStatus({
+                  message: USERS_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              ;(req as Request).decoded_refresh_token = decoded_refresh_token
+            } catch (error) {
+              if (error instanceof JsonWebTokenError)
+                throw new ErorrWithStatus({
+                  message: capitalize(error.message),
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
   )
 )

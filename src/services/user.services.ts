@@ -7,6 +7,7 @@ import { TokenType } from '~/constants/enums'
 import { ObjectId } from 'mongodb'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { config } from 'dotenv'
+import { USERS_MESSAGES } from '~/constants/messages'
 config()
 
 export class UserService {
@@ -34,7 +35,7 @@ export class UserService {
     })
   }
 
-  // Hàm tạo accesst_token, refresh_tokenToken
+  // Hàm tạo access_token, refresh_token
   private signAccessAndRefreshToken(user_id: string) {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshTokenToken(user_id)])
   }
@@ -54,20 +55,20 @@ export class UserService {
 
     // Lưu ý: DB không lưu token nào cả, chỉ trả về cho FE lưu
     // Sử dụng Promise vì các hàm tạo token đều là bất đồng bộ
-    // Tạo accesst_token, refresh_tokenToken
-    const [accesst_token, refresh_tokenToken] = await this.signAccessAndRefreshToken(user_id)
+    // Tạo access_token, refresh_token
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id)
 
-    // Lưu refresh_tokenToken vào DB sau khi Đăng kí tài khoản thành công
-    databaseServce.refreshtokens.insertOne(
+    // Lưu refresh_token vào DB sau khi Đăng kí tài khoản thành công
+    databaseServce.refreshTokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: refresh_tokenToken
+        token: refresh_token
       })
     )
     return {
       ...result,
-      accesst_token,
-      refresh_tokenToken
+      access_token,
+      refresh_token
     }
   }
 
@@ -78,20 +79,27 @@ export class UserService {
   }
 
   async login(user_id: string) {
-    // Tạo accesst_token, refresh_tokenToken
-    const [accesst_token, refresh_tokenToken] = await this.signAccessAndRefreshToken(user_id)
+    // Tạo access_token, refresh_token
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id)
 
-    // Lưu refresh_tokenToken vào DB sau khi Đăng nhập thành công
-    databaseServce.refreshtokens.insertOne(
+    // Lưu refresh_token vào DB sau khi Đăng nhập thành công
+    databaseServce.refreshTokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: refresh_tokenToken
+        token: refresh_token
       })
     )
 
     return {
-      accesst_token,
-      refresh_tokenToken
+      access_token,
+      refresh_token
+    }
+  }
+
+  async logout(refresh_token: string) {
+    await databaseServce.refreshTokens.deleteOne({ token: refresh_token })
+    return {
+      message: USERS_MESSAGES.LOGOUT_SUCCESS
     }
   }
 }
