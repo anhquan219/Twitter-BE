@@ -174,13 +174,10 @@ export const accessTokenValidator = validate(
   checkSchema(
     {
       Authorization: {
-        // Kiểm tra người dùng có gửi Authorization lên trong header không (access_token)
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
-        },
+        trim: true,
         custom: {
           options: async (value: string, { req }) => {
-            const access_token = value.split(' ')[1]
+            const access_token = (value || '').split(' ')[1]
             // Kiểm tra xem có access_token không
             if (!access_token) {
               throw new ErorrWithStatus({
@@ -190,7 +187,10 @@ export const accessTokenValidator = validate(
             }
             //Xác thực access_token có đúng hay không và gán vào req
             try {
-              const decoded_authorization = await verifyToken({ token: access_token })
+              const decoded_authorization = await verifyToken({
+                token: access_token,
+                secretOrPublickey: process.env.JWT_SECRECT_ACCESS_TOKEN as string
+              })
               ;(req as Request).decoded_authorization = decoded_authorization
             } catch (error) {
               throw new ErorrWithStatus({
@@ -212,15 +212,19 @@ export const refreshTokenValidator = validate(
     {
       refresh_token: {
         // Kiểm tra người dùng có gửi Authorization lên không (refresh_token)
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
-        },
+        trim: true,
         custom: {
           options: async (value: string, { req }) => {
+            if (!value) {
+              throw new ErorrWithStatus({
+                message: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
             // Xác thực refresh_token và kiểm tra refresh_token tồn tại trong DB không và gắn vào req
             try {
               const [decoded_refresh_token, refresh_token] = await Promise.all([
-                verifyToken({ token: value }),
+                verifyToken({ token: value, secretOrPublickey: process.env.JWT_SECRECT_REFRESH_TOKEN as string }),
                 databaseServce.refreshTokens.findOne({ token: value })
               ])
               if (refresh_token === null) {
@@ -231,13 +235,52 @@ export const refreshTokenValidator = validate(
               }
               ;(req as Request).decoded_refresh_token = decoded_refresh_token
             } catch (error) {
+              // Tránh TH refresh_token === null throw ở trên bị catch ở đây nên check error instanceof JsonWebTokenError thì mới show error này
               if (error instanceof JsonWebTokenError)
                 throw new ErorrWithStatus({
                   message: capitalize(error.message),
                   status: HTTP_STATUS.UNAUTHORIZED
                 })
+              throw error // error là error bắt được từ refresh_token === null
             }
             return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const emailVerifyTokenValidator = validate(
+  checkSchema(
+    {
+      email_verify_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!value) {
+              throw new ErorrWithStatus({
+                message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+
+            // Sử dụng try catch để bắt lỗi tránh khi verifyToken() lỗi bắn ra lỗi 422 (k mong muốn)
+            try {
+              // Xác thực email_verify_token và kiểm tra email_verify_token tồn tại trong DB không và gắn vào req
+              const decoded_email_verify_token = await verifyToken({
+                token: value,
+                secretOrPublickey: process.env.JWT_SECRECT_EMAIL_VERIFY_TOKEN as string
+              })
+              ;(req as Request).decoded_email_verify_token = decoded_email_verify_token
+              return true
+            } catch (error) {
+              throw new ErorrWithStatus({
+                message: capitalize((error as JsonWebTokenError).message),
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
           }
         }
       }
