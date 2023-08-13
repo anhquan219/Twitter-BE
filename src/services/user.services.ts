@@ -51,6 +51,19 @@ export class UserService {
     })
   }
 
+  private signForgotPasswordToken(user_id: string) {
+    return signToken({
+      payload: {
+        user_id,
+        token_type: TokenType.EmailVerifyToken
+      },
+      privateKey: process.env.JWT_SECRECT_FORGOT_PASSWORD_TOKEN as string,
+      options: {
+        expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRES_IN // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
+      }
+    })
+  }
+
   // Hàm tạo access_token, refresh_token
   private signAccessAndRefreshToken(user_id: string) {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshTokenToken(user_id)])
@@ -164,7 +177,52 @@ export class UserService {
       ]
     )
     return {
-      message: USERS_MESSAGES.RESEND_VERIFY_EMAIL_SUCCES
+      message: USERS_MESSAGES.RESEND_VERIFY_EMAIL_SUCCESS
+    }
+  }
+
+  async forgotPassword(user_id: string) {
+    const forgot_password_token = await this.signForgotPasswordToken(user_id.toString())
+    await databaseServce.users.updateOne(
+      {
+        _id: new ObjectId(user_id) // _id cần Update
+      },
+      [
+        {
+          $set: {
+            forgot_password_token,
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+
+    // Gửi email kèm đường link đến Email (http://twitter.com/forgot-password?token=token)
+    console.log('Gửi forgot password token', forgot_password_token)
+
+    return {
+      message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
+    }
+  }
+
+  async resetPassword(user_id: string, password: string) {
+    await databaseServce.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      [
+        {
+          $set: {
+            forgot_password_token: '',
+            password: hashPasswork(password),
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+
+    return {
+      message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS
     }
   }
 }

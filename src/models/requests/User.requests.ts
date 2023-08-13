@@ -1,4 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken'
+import { ObjectId } from 'mongodb'
 import { TokenType } from '~/constants/enums'
 
 export interface LoginReqBody {
@@ -20,6 +21,20 @@ export interface RegisterReqBody {
 
 export interface LogoutReqBody {
   refresh_token: string
+}
+
+export interface ForgotPasswordReqBody {
+  email: string
+}
+
+export interface VerifyForgotPasswordReqBody {
+  forgot_password_token: string
+}
+
+export interface ResetPasswordReqBody {
+  password: string
+  confirm_password: string
+  forgot_password_token: string
 }
 
 export interface TokenPayload extends JwtPayload {
