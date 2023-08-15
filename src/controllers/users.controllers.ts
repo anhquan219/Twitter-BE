@@ -114,8 +114,6 @@ export const verifyForgotPasswordTokenValidatorController = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { _id } = req.user as User
-
   return res.json({
     message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_SUCCESS
   })
@@ -132,4 +130,19 @@ export const resetPasswordController = async (
   const result = await userService.resetPassword(user_id, password)
 
   return res.json(result)
+}
+
+export const getMeController = async (
+  req: Request<ParamsDictionary, any, ResetPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+
+  const result = await userService.getMe(user_id)
+
+  return res.json({
+    message: USERS_MESSAGES.GET_MY_PROFILE_SUCCESS,
+    result
+  })
 }
