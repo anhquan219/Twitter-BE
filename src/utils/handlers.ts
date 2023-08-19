@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express'
 
-export const wrapRequesHandle = (func: RequestHandler) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+export const wrapRequesHandle = <P>(func: RequestHandler<P>) => {
+  return async (req: Request<P>, res: Response, next: NextFunction) => {
     try {
       await func(req, res, next)
     } catch (error) {
@@ -9,3 +9,7 @@ export const wrapRequesHandle = (func: RequestHandler) => {
     }
   }
 }
+
+// TH: getProfileController
+// Mong muốn: Request<{ username: string }>
+// Thực nhận: Request<{ [key: string]: string }
