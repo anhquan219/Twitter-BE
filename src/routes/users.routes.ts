@@ -11,6 +11,7 @@ import {
   getMeController,
   updateMeController
 } from '~/controllers/users.controllers'
+import { filterMiddlewares } from '~/middlewares/common.middlewares'
 import {
   accessTokenValidator,
   emailVerifyTokenValidator,
@@ -23,6 +24,7 @@ import {
   verifiedUserValidator,
   verifyForgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
+import { UpdateMeReqBody } from '~/models/requests/User.requests'
 import { wrapRequesHandle } from '~/utils/handlers'
 const usersRouter = Router()
 
@@ -113,9 +115,20 @@ usersRouter.get('/me', accessTokenValidator, wrapRequesHandle(getMeController))
 //  */
 usersRouter.patch(
   '/me',
-  accessTokenValidator,
-  verifiedUserValidator,
-  updateMeValidator,
+  accessTokenValidator, // Check acess Token
+  verifiedUserValidator, // Check user đã verify tài khoản hay chưa
+  updateMeValidator, // Check các trường gửi lên đúng validator chưa
+  filterMiddlewares<UpdateMeReqBody>([
+    // Lọc các trường không được phép update
+    'name',
+    'date_of_birth',
+    'bio',
+    'location',
+    'website',
+    'username',
+    'avatar',
+    'location'
+  ]),
   wrapRequesHandle(updateMeController)
 )
 
