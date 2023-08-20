@@ -325,7 +325,7 @@ export class UserService {
   }
 
   async follow(user_id: string, followed_user_id: string) {
-    const follower = databaseServce.followers.findOne({
+    const follower = await databaseServce.followers.findOne({
       user_id: new ObjectId(user_id),
       followed_user_id: new ObjectId(followed_user_id)
     })
@@ -345,6 +345,28 @@ export class UserService {
 
     return {
       message: USERS_MESSAGES.FOLLOWED
+    }
+  }
+
+  async unfollow(user_id: string, followed_user_id: string) {
+    const follower = await databaseServce.followers.findOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+
+    if (follower === null) {
+      return {
+        message: USERS_MESSAGES.AlREADY_UNFOLLOW
+      }
+    }
+
+    await databaseServce.followers.deleteOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+
+    return {
+      message: USERS_MESSAGES.UNFOLLOW_SUCCESS
     }
   }
 }

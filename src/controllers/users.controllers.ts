@@ -11,8 +11,9 @@ import {
   ResetPasswordReqBody,
   VerifyForgotPasswordReqBody,
   UpdateMeReqBody,
-  GetProfileReqParmas,
-  FollowReqBody
+  GetProfileReqParams,
+  FollowReqBody,
+  UnfollowReqParams
 } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { ObjectId } from 'mongodb'
@@ -165,7 +166,7 @@ export const updateMeController = async (
   })
 }
 
-export const getProfileController = async (req: Request<GetProfileReqParmas>, res: Response, next: NextFunction) => {
+export const getProfileController = async (req: Request<GetProfileReqParams>, res: Response, next: NextFunction) => {
   const { username } = req.params // req.params: lấy data trên thanh URL
 
   const result = await userService.getProfile(username)
@@ -185,6 +186,15 @@ export const followController = async (
   const { followed_user_id } = req.body
 
   const result = await userService.follow(user_id, followed_user_id)
+
+  return res.json(result)
+}
+
+export const unfollowController = async (req: Request<UnfollowReqParams>, res: Response, next: NextFunction) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const { user_id: followed_user_id } = req.params
+
+  const result = await userService.unfollow(user_id, followed_user_id)
 
   return res.json(result)
 }
