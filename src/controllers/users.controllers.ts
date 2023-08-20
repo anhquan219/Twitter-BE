@@ -11,7 +11,8 @@ import {
   ResetPasswordReqBody,
   VerifyForgotPasswordReqBody,
   UpdateMeReqBody,
-  GetProfileReqParmas
+  GetProfileReqParmas,
+  FollowReqBody
 } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { ObjectId } from 'mongodb'
@@ -173,4 +174,17 @@ export const getProfileController = async (req: Request<GetProfileReqParmas>, re
     message: USERS_MESSAGES.GET_USER_PROFILE_SUCCESS,
     result
   })
+}
+
+export const followController = async (
+  req: Request<ParamsDictionary, any, FollowReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const { followed_user_id } = req.body
+
+  const result = await userService.follow(user_id, followed_user_id)
+
+  return res.json(result)
 }
