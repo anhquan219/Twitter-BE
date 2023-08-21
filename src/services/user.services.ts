@@ -132,7 +132,7 @@ export class UserService {
     })
 
     // Lưu refresh_token vào DB sau khi Đăng nhập thành công
-    databaseServce.refreshTokens.insertOne(
+    await databaseServce.refreshTokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
         token: refresh_token
@@ -172,6 +172,13 @@ export class UserService {
           updated_at: true // Thời điểm MongoDB update
         }
       }
+    )
+
+    await databaseServce.refreshTokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_token
+      })
     )
 
     return {
@@ -367,6 +374,25 @@ export class UserService {
 
     return {
       message: USERS_MESSAGES.UNFOLLOW_SUCCESS
+    }
+  }
+
+  async changePassword(user_id: string, password: string) {
+    await databaseServce.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        $set: {
+          password: hashPasswork(password)
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+    return {
+      message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS
     }
   }
 }
