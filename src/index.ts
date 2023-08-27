@@ -2,6 +2,7 @@ import express from 'express'
 import usersRouter from '~/routes/users.routes'
 import databaseServce from '~/services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
+import mediasRouter from './routes/media.routes'
 const app = express()
 const port = 4000
 
@@ -10,6 +11,7 @@ databaseServce.connect() // Connect tới MongoDB
 app.use(express.json()) // Middlewares chuyển data req JSON sang dạng Obj
 // Cú pháp *.use() là middlewate, có thể có nhiều middlewate (Khi truy cập vào router thì luôn phải đi qua nó trước)
 app.use('/users', usersRouter) // Liên kết app tới router vừa tạo vơi tên router là '/user/
+app.use('/medias', mediasRouter)
 // Khi App lỗi sẽ nhẩy vào đây (Middlewares xử lý lỗi)
 app.use(defaultErrorHandler)
 
