@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express'
 import path from 'path'
 import fs from 'fs'
+import { File } from 'formidable'
+import { UPLOAD_TEMP_DIR } from '~/constants/dir'
 
 export const initFolder = () => {
-  const uploadFolderPath = path.resolve('uploads')
-
   // fs sử dụng để hendle đường dẫn trong dự án
-  if (!fs.existsSync(uploadFolderPath)) {
+  if (!fs.existsSync(UPLOAD_TEMP_DIR)) {
     // Tạo thư mục
-    fs.mkdirSync(uploadFolderPath, {
+    fs.mkdirSync(UPLOAD_TEMP_DIR, {
       recursive: true // Mục đích tạo folder nested (Cho phép tạo folder lồng nhau kiểu uploads/media)
     })
   }
@@ -20,7 +20,7 @@ export const handleUploadSingleImage = async (req: Request) => {
 
   // Setting
   const form = formidable({
-    uploadDir: path.resolve('uploads'), // Đường dẫn lưu file tạm khi upload
+    uploadDir: UPLOAD_TEMP_DIR, // Đường dẫn lưu file tạm khi upload
     maxFiles: 1,
     keepExtensions: true, // Giữ lại đuôi mở rộng khi lưu file
     maxFieldsSize: 300 * 1024, // 300KB
@@ -36,7 +36,7 @@ export const handleUploadSingleImage = async (req: Request) => {
   })
 
   // Chuyển callBack sang Promise để bắn lỗi ra ngoài xử lý
-  return new Promise((resolve, reject) => {
+  return new Promise<File>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
         // Nơi nhận form.emit() ở trên
@@ -48,7 +48,13 @@ export const handleUploadSingleImage = async (req: Request) => {
         return reject(new Error('File is emptry'))
       }
 
-      resolve(files)
+      resolve(files.image[0] as File)
     })
   })
+}
+
+export const getNameFromFullName = (fullname: string) => {
+  const nameArr = fullname.split('.')
+  nameArr.pop() // Loại bỏ item cuối cùng trong mảng
+  return nameArr.join('') // Ghép các item lại thành 1 chuỗi
 }
