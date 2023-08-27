@@ -4,6 +4,6 @@ import { wrapRequesHandle } from '~/utils/handlers'
 
 const mediasRouter = Router()
 
-mediasRouter.post('/upload-image', uploadSingleImageController)
+mediasRouter.post('/upload-image', wrapRequesHandle(uploadSingleImageController))
 
 export default mediasRouter
