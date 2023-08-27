@@ -3,8 +3,12 @@ import usersRouter from '~/routes/users.routes'
 import databaseServce from '~/services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediasRouter from './routes/media.routes'
+import { initFolder } from './utils/file'
 const app = express()
 const port = 4000
+
+// Tạo folder uploads khi khởi chạy app
+initFolder()
 
 databaseServce.connect() // Connect tới MongoDB
 // --- App hendler ---
