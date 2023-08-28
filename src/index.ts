@@ -4,13 +4,16 @@ import databaseServce from '~/services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediasRouter from './routes/media.routes'
 import { initFolder } from './utils/file'
+import { config } from 'dotenv'
+
+config()
+databaseServce.connect() // Connect tới MongoDB
 const app = express()
-const port = 4000
+const port = process.env.POST || 4000
 
 // Tạo folder uploads khi khởi chạy app
 initFolder()
 
-databaseServce.connect() // Connect tới MongoDB
 // --- App hendler ---
 app.use(express.json()) // Middlewares chuyển data req JSON sang dạng Obj
 // Cú pháp *.use() là middlewate, có thể có nhiều middlewate (Khi truy cập vào router thì luôn phải đi qua nó trước)

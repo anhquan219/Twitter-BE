@@ -4,6 +4,9 @@ import sharp from 'sharp'
 import { UPLOAD_DIR } from '~/constants/dir'
 import path from 'path'
 import fs from 'fs'
+import { isProduction } from '~/constants/config'
+import { config } from 'dotenv'
+config()
 
 class MediasService {
   async handleUploadSingleImage(req: Request) {
@@ -15,7 +18,9 @@ class MediasService {
 
     // Sau khi xử lý xong thì xóa image trong file "upload/temp"
     fs.unlinkSync(file.filepath)
-    return `http://localhost:4000/uploads/${newName}.jpg`
+    return isProduction
+      ? `${process.env.HOST}/medias/${newName}.jpg`
+      : `http://localhost:${process.env.POST}/medias/${newName}.jpg`
   }
 }
 
