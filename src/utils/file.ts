@@ -14,16 +14,17 @@ export const initFolder = () => {
   }
 }
 
-export const handleUploadSingleImage = async (req: Request) => {
+export const handleUploadImage = async (req: Request) => {
   // Cách sử dụng 1 thư viện ESModule trong CommonJS
   const formidable = (await import('formidable')).default
 
   // Setting
   const form = formidable({
     uploadDir: UPLOAD_TEMP_DIR, // Đường dẫn lưu file tạm khi upload
-    maxFiles: 1,
+    maxFiles: 4,
     keepExtensions: true, // Giữ lại đuôi mở rộng khi lưu file
     maxFieldsSize: 300 * 1024, // 300KB
+    maxTotalFileSize: 4 * 300 * 1024,
     filter: function ({ name, originalFilename, mimetype }) {
       const valid = name === 'image' && Boolean(mimetype?.includes('image/')) // Chỉ cho phép gửi lên trường có tên "image" và kiểu file là image
 
@@ -36,7 +37,7 @@ export const handleUploadSingleImage = async (req: Request) => {
   })
 
   // Chuyển callBack sang Promise để bắn lỗi ra ngoài xử lý
-  return new Promise<File>((resolve, reject) => {
+  return new Promise<File[]>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
         // Nơi nhận form.emit() ở trên
@@ -48,7 +49,7 @@ export const handleUploadSingleImage = async (req: Request) => {
         return reject(new Error('File is emptry'))
       }
 
-      resolve(files.image[0] as File)
+      resolve(files.image as File[])
     })
   })
 }

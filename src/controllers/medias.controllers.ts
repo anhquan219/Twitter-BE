@@ -2,11 +2,10 @@ import { Request, Response, NextFunction } from 'express'
 import path from 'path'
 import { UPLOAD_DIR } from '~/constants/dir'
 import mediasService from '~/services/medias.services'
-import { handleUploadSingleImage } from '~/utils/file'
 
-export const uploadSingleImageController = async (req: Request, res: Response, next: NextFunction) => {
+export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
   // Xử lý ảnh
-  const result = await mediasService.handleUploadSingleImage(req)
+  const result = await mediasService.uploadImageController(req)
   return res.json({
     result: result
   })
