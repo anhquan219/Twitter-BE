@@ -5,6 +5,7 @@ import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediasRouter from './routes/media.routes'
 import { initFolder } from './utils/file'
 import { config } from 'dotenv'
+import staticRouter from './routes/static.routes'
 
 config()
 databaseServce.connect() // Connect tới MongoDB
@@ -19,6 +20,7 @@ app.use(express.json()) // Middlewares chuyển data req JSON sang dạng Obj
 // Cú pháp *.use() là middlewate, có thể có nhiều middlewate (Khi truy cập vào router thì luôn phải đi qua nó trước)
 app.use('/users', usersRouter) // Liên kết app tới router vừa tạo vơi tên router là '/user/
 app.use('/medias', mediasRouter)
+app.use('/static', staticRouter) // Hiển thị ảnh
 // Khi App lỗi sẽ nhẩy vào đây (Middlewares xử lý lỗi)
 app.use(defaultErrorHandler)
 
