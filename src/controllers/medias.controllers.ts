@@ -51,11 +51,11 @@ export const serveVideoStreamController = (req: Request, res: Response, next: Ne
   // Lấy giá trị byte bắt đầu từ header Range (vd: bytes=1048576-)
   const start = Number(range.replace(/\D/g, ''))
   // Lấy giá trị byte kết thúc, vượt quá dung lượng video thì lấy giá trị videoSize
-  const end = Math.min(start + chunkSize, videoSize)
+  const end = Math.min(start + chunkSize, videoSize - 1)
 
   // Dung lượng thực tế cho mỗi đoạn video stream
   // THường đây sẽ là chunkSize, ngoại trừ đoạn cuối cùng
-  const contentLength = end - start
+  const contentLength = end - start + 1
   const contentType = mime.getType(videoPath) || 'video/*' // Sử dụng thư viện mine để lấy contentType của video
   const headers = {
     'Content-Range': `bytes ${start}-${end}/${videoSize}`,
