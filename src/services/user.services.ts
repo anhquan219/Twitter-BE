@@ -153,6 +153,38 @@ export class UserService {
     }
   }
 
+  async refreshToken({
+    user_id,
+    verify,
+    refresh_token
+  }: {
+    user_id: string
+    verify: UserVerifyStatus
+    refresh_token: string
+  }) {
+    const [access_token, new_refresh_token] = await this.signAccessAndRefreshToken({
+      user_id: user_id.toString(),
+      verify: verify
+    })
+
+    // Lưu refresh_token vào DB sau khi Đăng nhập thành công
+    await databaseServce.refreshTokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: new_refresh_token
+      })
+    )
+
+    await databaseServce.refreshTokens.deleteOne({
+      token: refresh_token
+    })
+
+    return {
+      access_token: access_token,
+      refresh_token: new_refresh_token
+    }
+  }
+
   async verifyEmail(user_id: string) {
     // updateOne: Update 1 cái
     const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
