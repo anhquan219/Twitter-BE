@@ -9,7 +9,12 @@ import staticRouter from './routes/static.routes'
 import { UPLOAD_VIDEO_DIR } from './constants/dir'
 
 config()
-databaseServce.connect() // Connect tới MongoDB
+databaseServce.connect().then(() => {
+  // Thực hiện tạo Index sau khi connect thành công đến DB
+  databaseServce.indexUsers()
+  databaseServce.indexRefreshToken()
+  databaseServce.indexFollowers()
+}) // Connect tới MongoDB
 const app = express()
 const port = process.env.POST || 4000
 

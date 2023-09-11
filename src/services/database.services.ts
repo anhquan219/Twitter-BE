@@ -30,15 +30,36 @@ class DatabaseServce {
     }
   }
 
+  // Viết Index cho DB
+  async indexUsers() {
+    const exists = await this.users.indexExists(['email_1_password_1', 'email_1', 'username_1'])
+    if (!exists) {
+      this.users.createIndex({ email: 1, password: 1 })
+      this.users.createIndex({ email: 1 }, { unique: true }) // unique: true ->> email luôn là duy nhất k trùng nhau
+      this.users.createIndex({ username: 1 }, { unique: true })
+    }
+  }
+  async indexRefreshToken() {
+    const exists = await this.refreshTokens.indexExists(['token_1', 'exp_1'])
+    if (!exists) {
+      this.refreshTokens.createIndex({ token: 1 })
+      this.refreshTokens.createIndex({ exp: 1 }, { expireAfterSeconds: 0 }) // Tự xóa token hết hạn sau khoảng thời gian exp
+    }
+  }
+  async indexFollowers() {
+    const exists = await this.refreshTokens.indexExists(['user_id_1_followed_user_id_1'])
+    if (!exists) {
+      this.followers.createIndex({ user_id: 1, followed_user_id: 1 })
+    }
+  }
+
   // Truy cập vào Collection có tên DB_USER_COLLECTION trong DB
   get users(): Collection<User> {
     return this.db.collection(process.env.DB_USER_COLLECTION as string)
   }
-
   get refreshTokens(): Collection<RefreshToken> {
     return this.db.collection(process.env.DB_REFRESH_TOKEN_COLLECTION as string)
   }
-
   get followers(): Collection<Follower> {
     return this.db.collection(process.env.DB_FOLLOWERS_COLLECTION as string)
   }
