@@ -553,3 +553,15 @@ export const changePasswordValidator = validate(
     ['body']
   )
 )
+
+// Check TH có đăng nhập hay không để validator access_token
+export const isUserLoggedInValidator = (middleware: (req: Request, res: Response, next: NextFunction) => void) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    // req.header (trong BE không phân biệt chữ hoa chữ thường) vs req.headers (của JS Express : Quy định chữ hoa chữ thường)
+    // Nếu có access_token thì check access_token
+    if (req.headers.authorization) {
+      return middleware(req, res, next)
+    }
+    next()
+  }
+}
