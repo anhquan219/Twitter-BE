@@ -16,7 +16,14 @@ export const createTweetController = async (req: Request<ParamsDictionary, any, 
 }
 
 export const getTweetController = async (req: Request<ParamsDictionary, any, TweetRequestBody>, res: Response) => {
-  const tweet = req.tweet as Tweet
+  // Tăng views mỗi khi gọi API
+  const result = await tweetService.increaseView(req.params.tweet_id, req.decoded_authorization?.user_id)
+  const tweet = {
+    // Miu tay (thay đổi 1 số giá trị trong obj) để lấy được giá trị view tăng ngay lập tức
+    ...req.tweet,
+    user_views: result.user_views,
+    guest_views: result.guest_views
+  }
   return res.json({
     message: TWEETS_MESSAGES.GET_TWEET_SUCCESSFULLY,
     tweet
