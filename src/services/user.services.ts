@@ -112,7 +112,7 @@ export class UserService {
         username: `user${user_id.toString()}`,
         email_verify_token,
         password: hashPasswork(payload.password),
-        date_of_birth: new Date(payload.date_of_bieth)
+        date_of_birth: new Date(payload.date_of_birth)
       })
     )
 
@@ -557,7 +557,7 @@ export class UserService {
       const data = await this.register({
         email: userInfo.email,
         name: userInfo.name,
-        date_of_bieth: new Date(),
+        date_of_birth: new Date().toISOString(),
         password: password,
         confirm_password: password
       })
