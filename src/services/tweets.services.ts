@@ -64,7 +64,8 @@ class TweetService {
         projection: {
           // Các trường muốn trả về
           user_views: 1,
-          guest_views: 1
+          guest_views: 1,
+          updated_at: 1
         }
       }
     )
@@ -72,21 +73,24 @@ class TweetService {
       // WithId: là chứa cả _id
       user_views: number
       guest_views: number
+      updated_at: Date
     }>
   }
 
   async getTweetChildren({
+    user_id,
     tweet_id,
     tweet_type,
     limit,
     page
   }: {
+    user_id?: string
     tweet_id: string
     tweet_type: TweetType
     limit: number
     page: number
   }) {
-    const tweet = await databaseServce.tweets
+    const tweets = await databaseServce.tweets
       .aggregate<Tweet>([
         {
           $match: {
@@ -179,9 +183,6 @@ class TweetService {
                   }
                 }
               }
-            },
-            views: {
-              $add: ['$user_views', '$guest_views']
             }
           }
         },
@@ -194,13 +195,43 @@ class TweetService {
       ])
       .toArray()
 
-    // Trả về tổng số lượng item
-    const totalItem = await databaseServce.tweets.countDocuments({
-      parent_id: new ObjectId(tweet_id),
-      type: tweet_type
+    const ids = tweets.map((tweet) => {
+      return tweet._id as ObjectId
+    })
+
+    const inc = user_id ? { user_views: 1 } : { guest_views: 1 }
+    const date = new Date()
+
+    // updateMany không trả về data sau khi update, vì thế cần tự ghi đè data mới vào data cũ và trả về cliend
+    const [, totalItem] = await Promise.all([
+      databaseServce.tweets.updateMany(
+        {
+          _id: {
+            $in: ids // Tìm các tweet có id nằm trong ids
+          }
+        },
+        {
+          $inc: inc,
+          $set: {
+            updated_at: date
+          }
+        }
+      ),
+      databaseServce.tweets.countDocuments({
+        parent_id: new ObjectId(tweet_id),
+        type: tweet_type
+      })
+    ])
+    tweets.forEach((tweet) => {
+      tweet.updated_at = date
+      if (user_id) {
+        tweet.user_views += 1
+      } else {
+        tweet.guest_views += 1
+      }
     })
     return {
-      tweet,
+      tweets,
       totalItem
     }
   }

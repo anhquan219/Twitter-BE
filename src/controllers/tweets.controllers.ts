@@ -23,7 +23,8 @@ export const getTweetController = async (req: Request<ParamsDictionary, any, Twe
     // Miu tay (thay đổi 1 số giá trị trong obj) để lấy được giá trị view tăng ngay lập tức
     ...req.tweet,
     user_views: result.user_views,
-    guest_views: result.guest_views
+    guest_views: result.guest_views,
+    updated_at: result.updated_at
   }
   return res.json({
     message: TWEETS_MESSAGES.GET_TWEET_SUCCESSFULLY,
@@ -38,8 +39,10 @@ export const getTweetChildrenController = async (
   const tweet_type = Number(req.query.tweet_type as string) as TweetType
   const limit = Number(req.query.limit as string)
   const page = Number(req.query.page as string)
+  const user_id = req.decoded_authorization?.user_id
 
-  const { tweet, totalItem } = await tweetService.getTweetChildren({
+  const { tweets, totalItem } = await tweetService.getTweetChildren({
+    user_id,
     tweet_id: req.params.tweet_id,
     tweet_type,
     limit,
@@ -49,7 +52,7 @@ export const getTweetChildrenController = async (
   return res.json({
     message: TWEETS_MESSAGES.GET_TWEET_COMMENTS_SUCCESSFULLY,
     result: {
-      tweets: tweet,
+      tweets: tweets,
       tweet_type,
       limit,
       page,
