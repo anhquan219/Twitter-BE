@@ -79,7 +79,8 @@ export const TWEETS_MESSAGES = {
   TWEET_NOT_FOUND: 'Tweet not found',
   TWEET_IS_NOT_PUBLIC: 'Tweet is not public',
   GET_TWEET_SUCCESSFULLY: 'Get tweet successfully',
-  GET_TWEET_COMMENTS_SUCCESSFULLY: 'Get tweet comments successfully'
+  GET_TWEET_COMMENTS_SUCCESSFULLY: 'Get tweet comments successfully',
+  GET_NEW_FEEDS_SUCCESSFULLY: 'Get new feeds successfully'
 } as const
 
 export const BOOKMARK_MESSAGES = {
