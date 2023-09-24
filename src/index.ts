@@ -9,6 +9,7 @@ import staticRouter from './routes/static.routes'
 import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
+import searchRouter from './routes/search.routes'
 
 config()
 databaseServce.connect().then(() => {
@@ -16,6 +17,7 @@ databaseServce.connect().then(() => {
   databaseServce.indexUsers()
   databaseServce.indexRefreshToken()
   databaseServce.indexFollowers()
+  databaseServce.indexTweets()
 }) // Connect tới MongoDB
 const app = express()
 const port = process.env.POST || 4000
@@ -30,6 +32,7 @@ app.use('/users', usersRouter) // Liên kết app tới router vừa tạo vơi 
 app.use('/medias', mediasRouter)
 app.use('/tweets', tweetsRouter)
 app.use('/bookmarks', bookmarksRouter)
+app.use('/search', searchRouter)
 app.use('/static', staticRouter) // Hiển thị ảnh
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR)) // Test Sử dụng express để hiển thị video
 // Khi App lỗi sẽ nhẩy vào đây (Middlewares xử lý lỗi)

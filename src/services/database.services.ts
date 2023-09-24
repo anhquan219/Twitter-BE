@@ -57,6 +57,13 @@ class DatabaseServce {
     }
   }
 
+  async indexTweets() {
+    const exists = await this.refreshTokens.indexExists(['content_text'])
+    if (!exists) {
+      this.followers.createIndex({ content: 'text' }, { default_language: 'none' }) //  default_language: 'none' : Không bỏ qua bất kì từ nào khi search
+    }
+  }
+
   // Truy cập vào Collection có tên DB_USER_COLLECTION trong DB
   get users(): Collection<User> {
     return this.db.collection(process.env.DB_USER_COLLECTION as string)
