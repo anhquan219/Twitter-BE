@@ -1,19 +1,64 @@
 import { SearchQuery } from '~/models/requests/Search.requets'
 import databaseServce from './database.services'
-import { TweetType } from '~/constants/enums'
+import { MediaType, MediaTypeQuery, TweetType } from '~/constants/enums'
 import { ObjectId } from 'mongodb'
 
 class SearchSearvice {
-  async search({ limit, page, content, user_id }: { limit: number; page: number; content: string; user_id: string }) {
+  async search({
+    limit,
+    page,
+    content,
+    media_type,
+    user_id,
+    people_follow
+  }: {
+    limit: number
+    page: number
+    content: string
+    user_id: string
+    media_type?: MediaTypeQuery
+    people_follow?: string
+  }) {
+    const $match: any = {
+      $text: {
+        $search: content
+      }
+    }
+
+    if (media_type) {
+      if (media_type === MediaTypeQuery.Image) {
+        $match['medias.type'] = MediaType.Image
+      }
+      if (media_type === MediaTypeQuery.Video) {
+        $match['medias.type'] = MediaType.Video
+      }
+    }
+
+    if (people_follow && people_follow === '1') {
+      // Lấy ra tất cả những người mk đang follow
+      const followedUserIds = await databaseServce.followers
+        .find(
+          {
+            user_id: new ObjectId(user_id)
+          },
+          {
+            projection: {
+              followed_user_id: 1,
+              _id: 0
+            }
+          }
+        )
+        .toArray()
+      const followedIds = followedUserIds.map((followedUserId) => followedUserId.followed_user_id)
+      followedIds.push(new ObjectId(user_id))
+      $match['user_id'] = { $in: followedIds }
+    }
+
     const [tweets, tweetsCount] = await Promise.all([
       databaseServce.tweets
         .aggregate([
           {
-            $match: {
-              $text: {
-                $search: content
-              }
-            }
+            $match: $match
           },
           {
             $lookup: {
@@ -163,11 +208,7 @@ class SearchSearvice {
       databaseServce.tweets
         .aggregate([
           {
-            $match: {
-              $text: {
-                $search: content
-              }
-            }
+            $match: $match
           },
           {
             $lookup: {
@@ -237,7 +278,7 @@ class SearchSearvice {
       tweet.updated_at = date
       tweet.user_views += 1
     })
-    return { tweets, totalItem: tweetsCount[0].total }
+    return { tweets, totalItem: tweetsCount[0]?.total || 0 }
   }
 }
 
