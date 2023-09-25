@@ -1,6 +1,6 @@
 import { SearchQuery } from '~/models/requests/Search.requets'
 import databaseServce from './database.services'
-import { MediaType, MediaTypeQuery, TweetType } from '~/constants/enums'
+import { MediaType, MediaTypeQuery, PeopleFollow, TweetType } from '~/constants/enums'
 import { ObjectId } from 'mongodb'
 
 class SearchSearvice {
@@ -17,7 +17,7 @@ class SearchSearvice {
     content: string
     user_id: string
     media_type?: MediaTypeQuery
-    people_follow?: string
+    people_follow?: PeopleFollow
   }) {
     const $match: any = {
       $text: {
@@ -34,7 +34,7 @@ class SearchSearvice {
       }
     }
 
-    if (people_follow && people_follow === '1') {
+    if (people_follow && people_follow === PeopleFollow.Following) {
       // Lấy ra tất cả những người mk đang follow
       const followedUserIds = await databaseServce.followers
         .find(
