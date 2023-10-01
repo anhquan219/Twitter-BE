@@ -4,10 +4,15 @@ import sharp from 'sharp'
 import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import path, { resolve } from 'path'
 import fs from 'fs'
+import fsPromise from 'fs/promises'
 import { isProduction } from '~/constants/config'
 import { config } from 'dotenv'
 import { MediaType } from '~/constants/enums'
 import { Media } from '~/models/Orther'
+import { uploadFileToS3 } from '~/utils/s3'
+import { CompleteMultipartUploadCommandOutput } from '@aws-sdk/client-s3'
+import mime from 'mime'
+
 config()
 
 class MediasService {
@@ -16,16 +21,23 @@ class MediasService {
     const result: Media[] = await Promise.all(
       files.map(async (file) => {
         const newName = getNameFromFullName(file.newFilename)
-        const newPath = path.resolve(UPLOAD_IMAGE_DIR, `${newName}.jpg`)
+        const newFullFilename = `${newName}.jpg`
+        const newPath = path.resolve(UPLOAD_IMAGE_DIR, newFullFilename)
         // Nhận ảnh upload từ file "upload/temp" và chuyển đổi ảnh về dạng jpeg sau đó lưu vào file "upload"
         await sharp(file.filepath).jpeg().toFile(newPath) // Vì chỗ này dùng await nên ta sử dụng Promise.all cho files array
 
+        //Upload lên S3 AWS
+        const s3Result = await uploadFileToS3({
+          filename: newFullFilename,
+          filepath: newPath,
+          ContentType: mime.getType(newFullFilename) as string
+        })
+
         // Sau khi xử lý xong thì xóa image trong file "upload/temp"
-        fs.unlinkSync(file.filepath)
+        await Promise.all([fsPromise.unlink(file.filepath), fsPromise.unlink(newPath)])
+
         return {
-          url: isProduction
-            ? `${process.env.HOST}/static/image/${newName}.jpg`
-            : `http://localhost:${process.env.POST}/static/image/${newName}.jpg`,
+          url: (s3Result as CompleteMultipartUploadCommandOutput).Location as string,
           type: MediaType.Image
         }
       })

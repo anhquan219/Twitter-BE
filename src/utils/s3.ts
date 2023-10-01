@@ -14,29 +14,31 @@ const s3 = new S3({
   }
 })
 
-const file = fs.readFileSync(path.resolve('uploads/images/40e024ef6b6cd838ebfb37400.jpg'))
-const parallelUploads3 = new Upload({
-  client: s3,
-  params: {
-    Bucket: 'twitter-clone-quanna', //Tên S3 muốn lưu trữ
-    Key: 'anh1.jpg', //Tên của file sau khi được lưu trên S3
-    Body: file, //File muốn lưu gửi từ BE
-    ContentType: 'image/jpeg' // Tránh việc tự động tải file về khi xem trên S3
-  },
+export const uploadFileToS3 = ({
+  filename,
+  filepath,
+  ContentType
+}: {
+  filename: string
+  filepath: string
+  ContentType: string
+}) => {
+  const parallelUploads3 = new Upload({
+    client: s3,
+    params: {
+      Bucket: 'twitter-clone-quanna', //Tên S3 muốn lưu trữ
+      Key: filename, //Tên của file sau khi được lưu trên S3
+      Body: fs.readFileSync(filepath), //Đường dẫn file muốn lưu gửi từ BE
+      ContentType: ContentType // Truyền lên type của file để tránh việc tự động tải file về khi xem trên S3
+    },
 
-  tags: [
-    /*...*/
-  ], // optional tags
-  queueSize: 4, // optional concurrency configuration
-  partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
-  leavePartsOnError: false // optional manually handle dropped parts
-})
+    tags: [
+      /*...*/
+    ], // optional tags
+    queueSize: 4, // optional concurrency configuration
+    partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
+    leavePartsOnError: false // optional manually handle dropped parts
+  })
 
-// Phần trăm đã upload được
-parallelUploads3.on('httpUploadProgress', (progress) => {
-  console.log(progress)
-})
-
-parallelUploads3.done().then((res) => {
-  console.log(res)
-})
+  return parallelUploads3.done()
+}
