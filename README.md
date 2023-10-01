@@ -40,3 +40,14 @@ User ---> Controller ---> Model ---> View
 - Controller: Nhận request và xử lý logic
 - Model: Xử lý DB
 - View: Hiển thị lại cho User
+
+## AWS
+
+### Dịch vụ SES
+
+- Gửi email số lượng lớn
+
+### Dịch vụ S3 Buckets
+
+- Lưu trữ data, ảnh, video
+- deloy React, Angular, Vus

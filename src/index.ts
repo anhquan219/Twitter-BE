@@ -11,6 +11,7 @@ import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
 import searchRouter from './routes/search.routes'
 import cors from 'cors'
+import '~/utils/s3'
 
 config()
 databaseServce.connect().then(() => {
