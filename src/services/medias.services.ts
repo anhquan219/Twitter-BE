@@ -3,9 +3,7 @@ import { getNameFromFullName, handleUploadImage, handleUploadVideo } from '~/uti
 import sharp from 'sharp'
 import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import path, { resolve } from 'path'
-import fs from 'fs'
 import fsPromise from 'fs/promises'
-import { isProduction } from '~/constants/config'
 import { config } from 'dotenv'
 import { MediaType } from '~/constants/enums'
 import { Media } from '~/models/Orther'
@@ -26,9 +24,9 @@ class MediasService {
         // Nhận ảnh upload từ file "upload/temp" và chuyển đổi ảnh về dạng jpeg sau đó lưu vào file "upload"
         await sharp(file.filepath).jpeg().toFile(newPath) // Vì chỗ này dùng await nên ta sử dụng Promise.all cho files array
 
-        //Upload lên S3 AWS
+        // Upload lên S3 AWS
         const s3Result = await uploadFileToS3({
-          filename: newFullFilename,
+          filename: 'images/' + newFullFilename,
           filepath: newPath,
           ContentType: mime.getType(newFullFilename) as string
         })
@@ -48,15 +46,23 @@ class MediasService {
 
   async uploadVideoController(req: Request) {
     const files = await handleUploadVideo(req) // Xử lý lấy thông tin file upload video với thư viện formidable
-    const result: Media[] = files.map((file) => {
-      return {
-        url: isProduction
-          ? `${process.env.HOST}/static/video/${file.newFilename}`
-          : `http://localhost:${process.env.POST}/static/video/${file.newFilename}`,
-        type: MediaType.Image
-      }
-    })
+    const result: Media[] = await Promise.all(
+      files.map(async (file) => {
+        // Upload lên S3 AWS
+        const s3Result = await uploadFileToS3({
+          filename: 'videos/' + file.newFilename,
+          filepath: file.filepath,
+          ContentType: mime.getType(file.newFilename) as string
+        })
 
+        fsPromise.unlink(file.filepath)
+
+        return {
+          url: (s3Result as CompleteMultipartUploadCommandOutput).Location as string,
+          type: MediaType.Image
+        }
+      })
+    )
     return result
   }
 }
