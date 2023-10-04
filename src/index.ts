@@ -10,6 +10,8 @@ import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
 import searchRouter from './routes/search.routes'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 import cors from 'cors'
 import '~/utils/s3'
 
@@ -22,6 +24,7 @@ databaseServce.connect().then(() => {
   databaseServce.indexTweets()
 }) // Connect tới MongoDB
 const app = express()
+const httpServer = createServer(app)
 const port = process.env.POST || 4000
 
 // Tạo folder uploads khi khởi chạy app
@@ -46,6 +49,23 @@ app.use(defaultErrorHandler)
 //   res.send('Hello')
 // })
 
-app.listen(port, () => {
+const io = new Server(httpServer, {
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+  /* options */
+})
+
+io.on('connection', (socket) => {
+  console.log(`user ${socket.id} connected`)
+
+  // socket ở đây đại diện cho đối tượng đang connected
+  socket.on('disconnect', () => {
+    console.log(`user ${socket.id} disconnect`)
+  })
+  // ...
+})
+
+httpServer.listen(port, () => {
   console.log(`Run on port ${port}`)
 })
