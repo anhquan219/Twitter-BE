@@ -56,14 +56,38 @@ const io = new Server(httpServer, {
   /* options */
 })
 
-io.on('connection', (socket) => {
-  console.log(`user ${socket.id} connected`)
+const users: {
+  [key: string]: {
+    socket_id: string
+  }
+} = {}
 
-  // socket ở đây đại diện cho đối tượng đang connected
+// Mỗi người connected khác nhau thì hàm này sẽ chạy riêng biệt cho người dùng đó
+// Bên trong hàm chỉ là 1 người dùng đang connected
+io.on('connection', (socket) => {
+  console.log(`user ${socket.id} connected`) // Mỗi người connect sẽ có 1 socket id riêng để tương tác với nhau
+  console.log(socket.handshake.auth)
+
+  // Lưu Id của các cliend đang connected
+  const user_id = socket.handshake.auth._id
+  users[user_id] = {
+    socket_id: socket.id
+  }
+
+  socket.on('private_message', (data) => {
+    const receiver_socket_id = users[data.to].socket_id
+    // socket.to(): gửi sự kiện đến 1 người nào đó nhất định dựa vào socket.id cửa người đó
+    socket.to(receiver_socket_id).emit('receiver_private_message', {
+      content: data.content,
+      from: user_id
+    })
+  })
+
+  // socket ở đây đại diện cho đối tượng đang connected (có nhiều đối tượng khi nhiều người connect)
   socket.on('disconnect', () => {
+    delete users[user_id]
     console.log(`user ${socket.id} disconnect`)
   })
-  // ...
 })
 
 httpServer.listen(port, () => {
