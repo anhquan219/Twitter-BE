@@ -7,6 +7,7 @@ import { TweetRequestBody } from '~/models/requests/Tweet.requets'
 import Tweet from '~/models/schemas/Tweet.schema'
 import Hashtag from '~/models/schemas/Hashtags.schema'
 import Bookmark from '~/models/schemas/Bookmark.schema'
+import Conversation from '~/models/schemas/Conversation.schema'
 config() // Cần gọi để sử dụng đươc process.env
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@twiiter.lto2cut.mongodb.net/?retryWrites=true&w=majority`
@@ -82,6 +83,9 @@ class DatabaseServce {
   }
   get bookmarks(): Collection<Bookmark> {
     return this.db.collection(process.env.DB_BOOKMARKS_COLLECTION as string)
+  }
+  get conversations(): Collection<Conversation> {
+    return this.db.collection(process.env.DB_CONVERSATIONS_COLLECTION as string)
   }
 }
 
