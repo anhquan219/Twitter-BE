@@ -15,6 +15,8 @@ import { Server } from 'socket.io'
 import cors from 'cors'
 import '~/utils/s3'
 import Conversation from './models/schemas/Conversation.schema'
+import conversationsRouter from './routes/conversation.routes'
+import { ObjectId } from 'mongodb'
 
 config()
 databaseServce.connect().then(() => {
@@ -40,6 +42,7 @@ app.use('/medias', mediasRouter)
 app.use('/tweets', tweetsRouter)
 app.use('/bookmarks', bookmarksRouter)
 app.use('/search', searchRouter)
+app.use('/conversations', conversationsRouter)
 app.use('/static', staticRouter) // Hiển thị ảnh
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR)) // Test Sử dụng express để hiển thị video
 // Khi App lỗi sẽ nhẩy vào đây (Middlewares xử lý lỗi)
@@ -82,8 +85,8 @@ io.on('connection', (socket) => {
     // Khi nhận được tin nhắn sẽ lưu vào DB
     await databaseServce.conversations.insertOne(
       new Conversation({
-        sender_id: data.from,
-        receiver_id: data.to,
+        sender_id: new ObjectId(data.from),
+        receiver_id: new ObjectId(data.to),
         content: data.content
       })
     )
