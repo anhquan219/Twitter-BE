@@ -519,6 +519,39 @@ export const unfollowValidator = validate(
   )
 )
 
+export const getConversationsValidator = validate(
+  checkSchema(
+    {
+      receiver_id: userIdSchema,
+      limit: {
+        isNumeric: true,
+        custom: {
+          options: async (value, { req }) => {
+            const num = Number(value)
+            if (num > 100 || num < 1) {
+              throw new Error('1 <= limit <= 100')
+            }
+            return true
+          }
+        }
+      },
+      page: {
+        isNumeric: true,
+        custom: {
+          options: async (value, { req }) => {
+            const num = Number(value)
+            if (num < 1) {
+              throw new Error('page >= 1')
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['params', 'query']
+  )
+)
+
 export const changePasswordValidator = validate(
   checkSchema(
     {

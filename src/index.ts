@@ -78,23 +78,24 @@ io.on('connection', (socket) => {
     socket_id: socket.id
   }
 
-  socket.on('private_message', async (data) => {
-    const receiver_socket_id = users[data.to]?.socket_id
+  socket.on('send_message', async (data) => {
+    const { content, sender_id, receiver_id } = data.payload
+    const receiver_socket_id = users[receiver_id]?.socket_id
     if (!receiver_socket_id) return
 
+    const conversation = new Conversation({
+      sender_id: new ObjectId(sender_id),
+      receiver_id: new ObjectId(receiver_id),
+      content: content
+    })
+
     // Khi nhận được tin nhắn sẽ lưu vào DB
-    await databaseServce.conversations.insertOne(
-      new Conversation({
-        sender_id: new ObjectId(data.from),
-        receiver_id: new ObjectId(data.to),
-        content: data.content
-      })
-    )
+    const result = await databaseServce.conversations.insertOne(conversation)
+    conversation._id = result.insertedId //Gán id trong DB vào
 
     // socket.to(): gửi sự kiện đến 1 người nào đó nhất định dựa vào socket.id cửa người đó
-    socket.to(receiver_socket_id).emit('receiver_private_message', {
-      content: data.content,
-      from: user_id
+    socket.to(receiver_socket_id).emit('receiver_message', {
+      payload: conversation
     })
   })
 

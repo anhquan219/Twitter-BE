@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
+import { GetConversationParams } from '~/models/requests/Conversation.requets'
 import conversationService from '~/services/conversations.servies'
 
-export const conversationController = async (req: Request, res: Response) => {
+export const conversationController = async (req: Request<GetConversationParams>, res: Response) => {
   const { receiver_id } = req.params
   const limit = Number(req.query.limit)
   const page = Number(req.query.page)
