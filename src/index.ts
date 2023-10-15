@@ -17,6 +17,12 @@ import '~/utils/s3'
 import Conversation from './models/schemas/Conversation.schema'
 import conversationsRouter from './routes/conversation.routes'
 import { ObjectId } from 'mongodb'
+import { verifyAccessToken } from './utils/commons'
+import { UserVerifyStatus } from './constants/enums'
+import { TokenPayload } from './models/requests/User.requests'
+import { ErorrWithStatus } from './models/Errors'
+import HTTP_STATUS from './constants/httpStatus'
+import { USERS_MESSAGES } from './constants/messages'
 
 config()
 databaseServce.connect().then(() => {
@@ -60,6 +66,35 @@ const io = new Server(httpServer, {
   /* options */
 })
 
+// Middlewares io instance (Chỉ chạy 1 lần)
+io.use(async (socket, next) => {
+  const { Authorization } = socket.handshake.auth // Cliend gửi Authorization lên
+  const access_token = Authorization?.split(' ')[1]
+
+  // Bắt lỗi Cliend không gửi Authorization
+  try {
+    const decoded_authorization = await verifyAccessToken(access_token)
+    const { verify } = decoded_authorization as TokenPayload
+    if (verify !== UserVerifyStatus.Verified) {
+      // Khi throw error ở đẩy sẽ nhảy đến catch bên dưới
+      throw new ErorrWithStatus({
+        message: USERS_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    }
+    // Truyền decoded_authorization vào socket handshake để sử dụng ở các Middlewares khác
+    socket.handshake.auth.decoded_authorization = decoded_authorization
+    next()
+  } catch (error) {
+    next({
+      // Cấu trúc obj bắt buộc của error socket
+      message: 'Unauthorized',
+      name: 'UnauthorizedError',
+      data: error
+    })
+  }
+})
+
 const users: {
   [key: string]: {
     socket_id: string
@@ -70,10 +105,9 @@ const users: {
 // Bên trong hàm chỉ là 1 người dùng đang connected
 io.on('connection', (socket) => {
   console.log(`user ${socket.id} connected`) // Mỗi người connect sẽ có 1 socket id riêng để tương tác với nhau
-  console.log(socket.handshake.auth)
 
   // Lưu Id của các cliend đang connected
-  const user_id = socket.handshake.auth._id
+  const { user_id } = socket.handshake.auth.decoded_authorization as TokenPayload
   users[user_id] = {
     socket_id: socket.id
   }
@@ -81,8 +115,8 @@ io.on('connection', (socket) => {
   socket.on('send_message', async (data) => {
     const { content, sender_id, receiver_id } = data.payload
     const receiver_socket_id = users[receiver_id]?.socket_id
-    if (!receiver_socket_id) return
 
+    // Nếu người nhận không online thì vẫn gửi tin nhắn và lưu vào DB
     const conversation = new Conversation({
       sender_id: new ObjectId(sender_id),
       receiver_id: new ObjectId(receiver_id),
@@ -93,10 +127,13 @@ io.on('connection', (socket) => {
     const result = await databaseServce.conversations.insertOne(conversation)
     conversation._id = result.insertedId //Gán id trong DB vào
 
-    // socket.to(): gửi sự kiện đến 1 người nào đó nhất định dựa vào socket.id cửa người đó
-    socket.to(receiver_socket_id).emit('receiver_message', {
-      payload: conversation
-    })
+    // Nếu người nhận online thì mới bắn socket tới
+    if (receiver_socket_id) {
+      // socket.to(): gửi sự kiện đến 1 người nào đó nhất định dựa vào socket.id cửa người đó
+      socket.to(receiver_socket_id).emit('receiver_message', {
+        payload: conversation
+      })
+    }
   })
 
   // socket ở đây đại diện cho đối tượng đang connected (có nhiều đối tượng khi nhiều người connect)
