@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info:
+  title: Swagger Twitter Clone - OpenAPI 3.0
+  version: 1.0.11
+servers:
+  - url: http://localhost:4000
+tags:
+  - name: users
+    description: Các API users
+paths:
+  /users/login:
+    post:
+      tags:
+        - users
+      summary: Đăng nhập
+      description: Đăng nhập
+      operationId: login
+      requestBody:
+        description: Thông tin đăng nhập
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginBody'
+        required: true
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/successAuthentication'
+  /users/me:
+    get:
+      tags:
+      - users
+      summary: Thông tin user
+      description: Thông tin
+      operationId: get me
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lấy thông tin user thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: Get my profile success
+                  result:
+                    $ref: '#/components/schemas/user'
+      

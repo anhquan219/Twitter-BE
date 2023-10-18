@@ -15,6 +15,22 @@ import cors from 'cors'
 import '~/utils/s3'
 import conversationsRouter from './routes/conversation.routes'
 import initSocket from './utils/socket'
+import swaggerUi from 'swagger-ui-express'
+import swaggerJsdoc from 'swagger-jsdoc'
+
+// Khởi tạo swagger và liên kết các file swagger
+const options: swaggerJsdoc.Options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'X clone (Twitter API)',
+      version: '1.0.0'
+    }
+  },
+  apis: ['./openapi/*.yaml'] // files containing annotations as above
+}
+
+const openapiSpecification = swaggerJsdoc(options)
 
 config()
 databaseServce.connect().then(() => {
@@ -30,6 +46,9 @@ const port = process.env.POST || 4000
 
 // Tạo folder uploads khi khởi chạy app
 initFolder()
+
+// Tạo router đến swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification))
 
 // --- App hendler ---
 app.use(cors())
