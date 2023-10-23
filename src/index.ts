@@ -11,13 +11,14 @@ import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
 import searchRouter from './routes/search.routes'
 import { createServer } from 'http'
-import cors from 'cors'
+import cors, { CorsOptions } from 'cors'
+import helmet from 'helmet'
 import '~/utils/s3'
 import conversationsRouter from './routes/conversation.routes'
 import initSocket from './utils/socket'
 import swaggerUi from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
-import { envConfig } from './constants/config'
+import { envConfig, isProduction } from './constants/config'
 
 // Khởi tạo swagger và liên kết các file swagger
 const options: swaggerJsdoc.Options = {
@@ -43,6 +44,12 @@ databaseServce.connect().then(() => {
 }) // Connect tới MongoDB
 const app = express()
 const httpServer = createServer(app)
+app.use(helmet())
+// corsOptions: tên miền được phép truy cập
+const corsOptions: CorsOptions = {
+  origin: isProduction ? envConfig.clientUrl : '*'
+}
+app.use(cors(corsOptions)) // corsOptions: tên miền được phép truy cập
 const port = envConfig.port || 4000
 
 // Tạo folder uploads khi khởi chạy app
@@ -52,7 +59,6 @@ initFolder()
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification))
 
 // --- App hendler ---
-app.use(cors())
 app.use(express.json()) // Middlewares chuyển data req JSON sang dạng Obj
 // Cú pháp *.use() là middlewate, có thể có nhiều middlewate (Khi truy cập vào router thì luôn phải đi qua nó trước)
 app.use('/users', usersRouter) // Liên kết app tới router vừa tạo vơi tên router là '/user/
