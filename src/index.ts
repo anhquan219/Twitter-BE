@@ -19,6 +19,7 @@ import initSocket from './utils/socket'
 import swaggerUi from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
 import { envConfig, isProduction } from './constants/config'
+import { rateLimit } from 'express-rate-limit'
 
 // Khởi tạo swagger và liên kết các file swagger
 const options: swaggerJsdoc.Options = {
@@ -43,6 +44,16 @@ databaseServce.connect().then(() => {
   databaseServce.indexTweets()
 }) // Connect tới MongoDB
 const app = express()
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // Trong khoảng thời gian 15'
+  max: 100, // Tối đa 100 req trên 1 IP trong vòng 15'
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false // Disable the `X-RateLimit-*` headers
+  // store: ... , // Use an external store for more precise rate limiting
+})
+app.use(limiter)
+
 const httpServer = createServer(app)
 app.use(helmet())
 // corsOptions: tên miền được phép truy cập
