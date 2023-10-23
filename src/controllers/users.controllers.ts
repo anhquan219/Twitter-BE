@@ -23,6 +23,7 @@ import databaseServce from '~/services/database.services'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { UserVerifyStatus } from '~/constants/enums'
 import { config } from 'dotenv'
+import { envConfig } from '~/constants/config'
 config()
 
 export const loginController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
@@ -228,6 +229,6 @@ export const oauthController = async (req: Request, res: Response, next: NextFun
   const { code } = req.query // Lấy trường code trong URL
   const result = await userService.oauth(code as string)
   // Sau khi đăng nhập hoặc đăng kí thành công với Google thì gửi 1 res.redirect về Cliend chứa các thông tin cần thiết
-  const urlRedirect = `${process.env.CLIENT_REDIRECT_CALLBACK}?access_token=${result.access_token}&refresh_token=${result.refresh_token}?new_user=${result.newUser}?verify=${result.verify}`
+  const urlRedirect = `${envConfig.clientRedirectCallback}?access_token=${result.access_token}&refresh_token=${result.refresh_token}?new_user=${result.newUser}?verify=${result.verify}`
   res.redirect(urlRedirect)
 }

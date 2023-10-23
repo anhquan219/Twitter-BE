@@ -14,6 +14,7 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import Follower from '~/models/schemas/Follower.schema'
 import axios from 'axios'
 import { sendForgotPasswordEmail, sendVerifyRegisterEmail } from '~/utils/email'
+import { envConfig } from '~/constants/config'
 config()
 
 export class UserService {
@@ -24,9 +25,9 @@ export class UserService {
         token_type: TokenType.AccessToken,
         verify
       },
-      privateKey: process.env.JWT_SECRECT_ACCESS_TOKEN as string,
+      privateKey: envConfig.jwtSecretAccessToken as string,
       options: {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
+        expiresIn: envConfig.accessTokenExpiresIn // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
       }
     })
   }
@@ -40,7 +41,7 @@ export class UserService {
           verify,
           exp
         },
-        privateKey: process.env.JWT_SECRECT_REFRESH_TOKEN as string
+        privateKey: envConfig.jwtSecretRefreshToken as string
       })
     }
 
@@ -50,9 +51,9 @@ export class UserService {
         token_type: TokenType.RefreshToken,
         verify
       },
-      privateKey: process.env.JWT_SECRECT_REFRESH_TOKEN as string,
+      privateKey: envConfig.jwtSecretRefreshToken as string,
       options: {
-        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
+        expiresIn: envConfig.refreshTokenExpiresIn // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
       }
     })
   }
@@ -64,9 +65,9 @@ export class UserService {
         token_type: TokenType.EmailVerifyToken,
         verify
       },
-      privateKey: process.env.JWT_SECRECT_EMAIL_VERIFY_TOKEN as string,
+      privateKey: envConfig.jwtSecretEmailVerifyToken as string,
       options: {
-        expiresIn: process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
+        expiresIn: envConfig.emailVerifyTokenExpiresIn // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
       }
     })
   }
@@ -78,9 +79,9 @@ export class UserService {
         token_type: TokenType.EmailVerifyToken,
         verify
       },
-      privateKey: process.env.JWT_SECRECT_FORGOT_PASSWORD_TOKEN as string,
+      privateKey: envConfig.jwtSecretForgotPasswordToken as string,
       options: {
-        expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRES_IN // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
+        expiresIn: envConfig.forgotPasswordTokenExpiresIn // Nếu là number thì sẽ là giây, nếu là string thì quy định đơn vị giờ phút giây (h, m, s)
       }
     })
   }
@@ -93,7 +94,7 @@ export class UserService {
   private decodeRefreshToken(refresh_token: string) {
     return verifyToken({
       token: refresh_token,
-      secretOrPublickey: process.env.JWT_SECRECT_REFRESH_TOKEN as string
+      secretOrPublickey: envConfig.jwtSecretRefreshToken as string
     })
   }
 
@@ -477,9 +478,9 @@ export class UserService {
   private async getOauthGoogleToken(code: string) {
     const body = {
       code,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      client_id: envConfig.googleClientId,
+      client_secret: envConfig.googleClientSecret,
+      redirect_uri: envConfig.googleRedirectUri,
       grant_type: 'authorization_code'
     }
 

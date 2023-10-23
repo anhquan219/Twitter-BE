@@ -5,6 +5,7 @@ import { verifyToken } from './jwt'
 import { capitalize } from 'lodash'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { Request } from 'express'
+import { envConfig } from '~/constants/config'
 
 // Hàm chuyển enum thành Array number
 export const numberEnumtoArray = (numberEnum: { [key: string]: string | number }) => {
@@ -25,7 +26,7 @@ export const verifyAccessToken = async (access_token: string, req?: Request) => 
   try {
     const decoded_authorization = await verifyToken({
       token: access_token,
-      secretOrPublickey: process.env.JWT_SECRECT_ACCESS_TOKEN as string
+      secretOrPublickey: envConfig.jwtSecretAccessToken as string
     })
     if (req) {
       ;(req as Request).decoded_authorization = decoded_authorization

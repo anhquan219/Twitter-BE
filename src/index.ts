@@ -17,6 +17,7 @@ import conversationsRouter from './routes/conversation.routes'
 import initSocket from './utils/socket'
 import swaggerUi from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
+import { envConfig } from './constants/config'
 
 // Khởi tạo swagger và liên kết các file swagger
 const options: swaggerJsdoc.Options = {
@@ -42,7 +43,7 @@ databaseServce.connect().then(() => {
 }) // Connect tới MongoDB
 const app = express()
 const httpServer = createServer(app)
-const port = process.env.POST || 4000
+const port = envConfig.port || 4000
 
 // Tạo folder uploads khi khởi chạy app
 initFolder()

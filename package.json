@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx nodemon --development",
+    "dev:prod": "npx nodemon --production",
     "build": "rimraf ./dist && tsc && tsc-alias",
     "start": "node dist/index.js --production",
     "lint": "eslint .",

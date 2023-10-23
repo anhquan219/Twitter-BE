@@ -15,6 +15,7 @@ import { TokenPayload } from '~/models/requests/User.requests'
 import { UserVerifyStatus } from '~/constants/enums'
 import { REGEX_USERNAME } from '~/constants/regex'
 import { verifyAccessToken } from '~/utils/commons'
+import { envConfig } from '~/constants/config'
 
 const passwordSchema: ParamSchema = {
   notEmpty: {
@@ -89,7 +90,7 @@ const forgotPasswordTokenSchema: ParamSchema = {
       try {
         const decoded_forgot_password_token = await verifyToken({
           token: value,
-          secretOrPublickey: process.env.JWT_SECRECT_FORGOT_PASSWORD_TOKEN as string
+          secretOrPublickey: envConfig.jwtSecretForgotPasswordToken as string
         })
         const { user_id } = decoded_forgot_password_token
         const user = await databaseServce.users.findOne({ _id: new ObjectId(user_id) })
@@ -277,7 +278,7 @@ export const refreshTokenValidator = validate(
             // Xác thực refresh_token và kiểm tra refresh_token tồn tại trong DB không và gắn vào req
             try {
               const [decoded_refresh_token, refresh_token] = await Promise.all([
-                verifyToken({ token: value, secretOrPublickey: process.env.JWT_SECRECT_REFRESH_TOKEN as string }),
+                verifyToken({ token: value, secretOrPublickey: envConfig.jwtSecretRefreshToken as string }),
                 databaseServce.refreshTokens.findOne({ token: value })
               ])
               if (refresh_token === null) {
@@ -324,7 +325,7 @@ export const emailVerifyTokenValidator = validate(
               // Xác thực email_verify_token và kiểm tra email_verify_token tồn tại trong DB không và gắn vào req
               const decoded_email_verify_token = await verifyToken({
                 token: value,
-                secretOrPublickey: process.env.JWT_SECRECT_EMAIL_VERIFY_TOKEN as string
+                secretOrPublickey: envConfig.jwtSecretEmailVerifyToken as string
               })
               ;(req as Request).decoded_email_verify_token = decoded_email_verify_token
               return true
