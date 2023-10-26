@@ -1,12 +1,28 @@
 import { config } from 'dotenv'
-import argv from 'minimist'
 config()
-const options = argv(process.argv.slice(2))
+import fs from 'fs'
+import path from 'path'
+const env = process.env.NODE_ENV // Lấy môi trường từ file package.json (Không cần sử dụng thư viện minimist)
+const envFilename = `.env.${env}`
 
-export const isProduction = options.env === 'production'
+if (!env) {
+  console.log(`Bạn chưa cung cấp biến môi trường NODE_ENV (ví dụ: development, production)`)
+  console.log(`Phát hiện NODE_ENV = ${env}`)
+  process.exit(1)
+}
+console.log(`Phát hiện NODE_ENV = ${env}, vì thế app sẽ dùng file môi trường là ${envFilename}`)
+if (!fs.existsSync(path.resolve(envFilename))) {
+  console.log(`Không tìm thấy file môi trường ${envFilename}`)
+  console.log(`Lưu ý: App không dùng file .env, ví dụ môi trường là development thì app sẽ dùng file .env.development`)
+  console.log(`Vui lòng tạo file ${envFilename} và tham khảo nội dung ở file .env.example`)
+  process.exit(1)
+}
+
 config({
-  path: options.env ? `.env.${options.env}` : '.env'
+  path: envFilename
 })
+
+export const isProduction = env === 'production'
 
 export const envConfig = {
   port: (process.env.PORT as string) || 4000,
@@ -15,7 +31,7 @@ export const envConfig = {
   dbUsername: process.env.DB_USERNAME as string,
   dbPassword: process.env.DB_PASSWORD as string,
   dbTweetsCollection: process.env.DB_TWEETS_COLLECTION as string,
-  dbUsersCollection: process.env.DB_USERS_COLLECTION as string,
+  dbUsersCollection: process.env.DB_USER_COLLECTION as string,
   dbHashtagsCollection: process.env.DB_HASHTAGS_COLLECTION as string,
   dbBookmarksCollection: process.env.DB_BOOKMARKS_COLLECTION as string,
   dbRefreshTokensCollection: process.env.DB_REFRESH_TOKENS_COLLECTION as string,
